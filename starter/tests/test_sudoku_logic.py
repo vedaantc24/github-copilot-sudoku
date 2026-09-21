@@ -67,6 +67,12 @@ def test_generate_puzzle_returns_9x9_puzzle_and_solution():
     assert all(len(row) == sudoku_logic.SIZE for row in puzzle)
     assert all(len(row) == sudoku_logic.SIZE for row in solution)
     assert all(cell in range(1, sudoku_logic.SIZE + 1) for row in solution for cell in row)
+    assert all(set(row) == set(range(1, sudoku_logic.SIZE + 1)) for row in solution)
+    assert all(
+        {solution[row][col] for row in range(sudoku_logic.SIZE)}
+        == set(range(1, sudoku_logic.SIZE + 1))
+        for col in range(sudoku_logic.SIZE)
+    )
 
 
 def test_puzzle_givens_match_corresponding_solution_values():
@@ -82,3 +88,34 @@ def test_generate_puzzle_uses_current_default_clue_behavior():
     puzzle, _ = sudoku_logic.generate_puzzle()
 
     assert sum(cell != sudoku_logic.EMPTY for row in puzzle for cell in row) == 35
+
+
+def test_count_solutions_distinguishes_zero_one_and_multiple_solutions():
+    invalid = sudoku_logic.create_empty_board()
+    invalid[0][0] = 1
+    invalid[0][1] = 1
+    assert sudoku_logic.count_solutions(invalid) == 0
+
+    solved = [
+        [5, 3, 4, 6, 7, 8, 9, 1, 2],
+        [6, 7, 2, 1, 9, 5, 3, 4, 8],
+        [1, 9, 8, 3, 4, 2, 5, 6, 7],
+        [8, 5, 9, 7, 6, 1, 4, 2, 3],
+        [4, 2, 6, 8, 5, 3, 7, 9, 1],
+        [7, 1, 3, 9, 2, 4, 8, 5, 6],
+        [9, 6, 1, 5, 3, 7, 2, 8, 4],
+        [2, 8, 7, 4, 1, 9, 6, 3, 5],
+        [3, 4, 5, 2, 8, 6, 1, 7, 9],
+    ]
+    assert sudoku_logic.count_solutions(solved) == 1
+
+    almost_empty = sudoku_logic.create_empty_board()
+    assert sudoku_logic.count_solutions(almost_empty) == 2
+
+
+def test_difficulty_levels_use_centralized_clue_counts():
+    for difficulty, clues in sudoku_logic.DIFFICULTY_CLUES.items():
+        puzzle, _ = sudoku_logic.generate_puzzle(difficulty=difficulty)
+
+        assert sum(cell != sudoku_logic.EMPTY for row in puzzle for cell in row) == clues
+        assert sudoku_logic.count_solutions(puzzle) == 1
