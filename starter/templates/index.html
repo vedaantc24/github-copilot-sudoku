@@ -1,46 +1,64 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sudoku Game</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <h1>Sudoku Game</h1>
-  <div class="game-info">
-    <label for="difficulty">Difficulty:</label>
-    <select id="difficulty">
-      <option value="easy">Easy</option>
-      <option value="medium" selected>Medium</option>
-      <option value="hard">Hard</option>
-    </select>
-    <span id="timer">Time: 00:00</span>
-  </div>
-  <div id="sudoku-board"></div>
-  <div class="controls">
-    <button id="new-game">New Game</button>
-    <button id="check-solution">Check Solution</button>
-    <button id="get-hint">Hint</button>
-    <span id="hint-count">Hints used: 0</span>
-    <label for="player-name">Player name:</label>
-    <input id="player-name" type="text" maxlength="40" placeholder="Anonymous">
-    <span id="message"></span>
-  </div>
-  <section id="leaderboard-section" aria-labelledby="leaderboard-title">
-    <h2 id="leaderboard-title">Top 10 Fastest Times</h2>
-    <table id="leaderboard">
-      <thead>
-        <tr>
-          <th scope="col">Rank</th>
-          <th scope="col">Player</th>
-          <th scope="col">Time</th>
-          <th scope="col">Difficulty</th>
-          <th scope="col">Hints</th>
-        </tr>
-      </thead>
-      <tbody id="leaderboard-body"></tbody>
-    </table>
-  </section>
+  <main class="app-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Daily practice</p>
+        <h1>Sudoku Game</h1>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false">Dark mode</button>
+    </header>
+    <section class="game-panel" aria-labelledby="game-title">
+      <h2 id="game-title" class="sr-only">Sudoku puzzle</h2>
+      <div class="game-info">
+        <label for="difficulty">Difficulty</label>
+        <select id="difficulty">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+        <span id="timer" role="timer" aria-live="off">Time: 00:00</span>
+      </div>
+      <div id="sudoku-board" role="grid" aria-label="Sudoku puzzle"></div>
+      <div class="controls">
+        <div class="action-buttons">
+          <button id="new-game" type="button">New game</button>
+          <button id="check-solution" type="button">Check solution</button>
+          <button id="get-hint" type="button">Get hint</button>
+        </div>
+        <div class="player-controls">
+          <span id="hint-count" aria-live="polite">Hints used: 0</span>
+          <label for="player-name">Player name</label>
+          <input id="player-name" type="text" maxlength="40" placeholder="Anonymous">
+        </div>
+        <p id="message" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+    <section id="leaderboard-section" aria-labelledby="leaderboard-title">
+      <h2 id="leaderboard-title">Top 10 fastest times</h2>
+      <div class="table-wrap">
+        <table id="leaderboard">
+          <thead>
+            <tr>
+              <th scope="col">Rank</th>
+              <th scope="col">Player</th>
+              <th scope="col">Time</th>
+              <th scope="col">Difficulty</th>
+              <th scope="col">Hints</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
   <script src="/static/main.js"></script>
 </body>
 </html>

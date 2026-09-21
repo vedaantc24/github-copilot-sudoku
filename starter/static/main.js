@@ -1,5 +1,6 @@
 const SIZE = 9;
 const LEADERBOARD_STORAGE_KEY = 'sudokuLeaderboard';
+const THEME_STORAGE_KEY = 'sudokuTheme';
 const gameState = {
   puzzle: [],
   hintedCells: new Set(),
@@ -24,7 +25,26 @@ function getInput(row, col) {
 function setMessage(text, color) {
   const message = document.getElementById('message');
   message.innerText = text;
-  message.style.color = color;
+  message.classList.toggle('message-error', color === '#d32f2f');
+  message.classList.toggle('message-success', color === '#388e3c');
+}
+
+function applyTheme(theme) {
+  const isDark = theme === 'dark';
+  document.body.dataset.theme = isDark ? 'dark' : 'light';
+  const toggle = document.getElementById('theme-toggle');
+  toggle.innerText = isDark ? 'Light mode' : 'Dark mode';
+  toggle.setAttribute('aria-pressed', String(isDark));
+}
+
+function toggleTheme() {
+  const theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(theme);
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch (error) {
+    // Theme still applies when storage is unavailable.
+  }
 }
 
 function setControlsDisabled(disabled) {
@@ -224,6 +244,8 @@ function createBoardElement() {
       input.className = 'sudoku-cell';
       input.dataset.row = i;
       input.dataset.col = j;
+      input.setAttribute('aria-label', `Row ${i + 1}, column ${j + 1}`);
+      input.setAttribute('role', 'gridcell');
       input.addEventListener('input', handleCellInput);
       rowDiv.appendChild(input);
     }
@@ -356,6 +378,14 @@ async function getHint() {
 
 // Wire buttons
 window.addEventListener('load', () => {
+  let savedTheme = 'light';
+  try {
+    savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY) === 'dark' ? 'dark' : 'light';
+  } catch (error) {
+    // Use the light theme when storage is unavailable.
+  }
+  applyTheme(savedTheme);
+  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
   document.getElementById('new-game').addEventListener('click', newGame);
   document.getElementById('check-solution').addEventListener('click', checkSolution);
   document.getElementById('get-hint').addEventListener('click', getHint);
