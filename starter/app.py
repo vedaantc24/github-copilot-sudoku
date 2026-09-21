@@ -47,6 +47,7 @@ def new_game():
             return jsonify({'error': 'Invalid difficulty'}), 400
         puzzle, solution = sudoku_logic.generate_puzzle(difficulty=difficulty)
     else:
+        difficulty = 'medium'
         try:
             clues = int(request.args.get('clues', sudoku_logic.MEDIUM_CLUES))
         except (TypeError, ValueError):
@@ -65,7 +66,7 @@ def new_game():
         'completed': False,
     }
     session['game_id'] = game_id
-    return jsonify({'puzzle': puzzle})
+    return jsonify({'puzzle': puzzle, 'difficulty': difficulty})
 
 @app.route('/check', methods=['POST'])
 def check_solution():
