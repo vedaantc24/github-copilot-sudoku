@@ -55,6 +55,58 @@ def test_post_check_with_incorrect_values_reports_incorrect_cells(client):
     assert response.get_json()['correct'] is False
 
 
+def test_post_check_reports_the_exact_incorrect_cell(client):
+    puzzle = client.get('/new').get_json()['puzzle']
+    board = solve_board(puzzle)
+    row, col = next(
+        (row, col)
+        for row in range(9)
+        for col in range(9)
+        if puzzle[row][col] == 0
+    )
+    board[row][col] = board[row][col] % 9 + 1
+
+    response = client.post('/check', json={'board': board})
+
+    assert response.status_code == 200
+    assert response.get_json() == {
+        'incorrect': [[row, col]],
+        'correct': False,
+    }
+
+
+def test_post_hint_returns_one_cell_without_exposing_solution(client):
+    puzzle = client.get('/new').get_json()['puzzle']
+    response = client.post('/hint', json={'board': puzzle})
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert set(payload) == {'hint', 'hints_used'}
+    assert set(payload['hint']) == {'row', 'col', 'value'}
+    row = payload['hint']['row']
+    col = payload['hint']['col']
+    assert puzzle[row][col] == 0
+    assert payload['hint']['value'] in range(1, 10)
+    assert payload['hints_used'] == 1
+
+
+def test_post_hint_returns_no_hint_when_board_has_no_empty_cells(client):
+    puzzle = client.get('/new').get_json()['puzzle']
+    solved_board = solve_board(puzzle)
+
+    response = client.post('/hint', json={'board': solved_board})
+
+    assert response.status_code == 200
+    assert response.get_json() == {'hint': None, 'hints_used': 0}
+
+
+def test_post_hint_before_a_game_exists_returns_existing_error(client):
+    response = client.post('/hint', json={'board': [[0] * 9 for _ in range(9)]})
+
+    assert response.status_code == 400
+    assert response.get_json() == {'error': 'No game in progress'}
+
+
 def test_post_check_rejects_missing_json_body(client):
     response = client.post('/check')
 

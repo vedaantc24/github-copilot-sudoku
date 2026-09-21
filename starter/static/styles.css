@@ -48,6 +48,17 @@ h1 {
     background: #ffcdd2;
 }
 
+.sudoku-cell.conflict {
+    background: #ffecb3;
+    box-shadow: inset 0 0 0 2px #f57c00;
+}
+
+.sudoku-cell.hinted {
+    background: #d1c4e9;
+    color: #4527a0;
+    font-weight: bold;
+}
+
 .sudoku-cell:nth-child(3),
 .sudoku-cell:nth-child(6) {
     border-right: 3px solid #333;
@@ -76,6 +87,16 @@ button {
 
 button:hover {
     background: #1565c0;
+}
+
+button:disabled {
+    background: #90a4ae;
+    cursor: not-allowed;
+}
+
+#hint-count {
+    margin-left: 8px;
+    color: #555;
 }
 
 #message {

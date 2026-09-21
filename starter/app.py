@@ -12,6 +12,28 @@ app.extensions['sudoku_games'] = {}
 def get_game_store():
     return app.extensions['sudoku_games']
 
+
+def validate_board_payload(data):
+    if not isinstance(data, dict):
+        return None, 'Request must contain a JSON object'
+    if 'board' not in data:
+        return None, 'JSON must contain a board property'
+
+    board = data['board']
+    if (not isinstance(board, list)
+            or len(board) != sudoku_logic.SIZE
+            or any(not isinstance(row, list) or len(row) != sudoku_logic.SIZE for row in board)):
+        return None, 'Board must contain exactly 9 rows of 9 cells'
+    if any(type(cell) is not int or not 0 <= cell <= sudoku_logic.SIZE
+           for row in board for cell in row):
+        return None, 'Board cells must be integers from 0 through 9'
+    return board, None
+
+
+def get_current_game():
+    return get_game_store().get(session.get('game_id'))
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -35,7 +57,13 @@ def new_game():
             return jsonify({'error': 'Invalid clues value'}), 400
 
     game_id = uuid.uuid4().hex
-    get_game_store()[game_id] = {'puzzle': puzzle, 'solution': solution}
+    get_game_store()[game_id] = {
+        'puzzle': puzzle,
+        'solution': solution,
+        'hints_used': 0,
+        'hinted_cells': set(),
+        'completed': False,
+    }
     session['game_id'] = game_id
     return jsonify({'puzzle': puzzle})
 
@@ -44,23 +72,11 @@ def check_solution():
     if not request.is_json:
         return jsonify({'error': 'Request must contain JSON'}), 400
 
-    data = request.get_json(silent=True)
-    if not isinstance(data, dict):
-        return jsonify({'error': 'Request must contain a JSON object'}), 400
-    if 'board' not in data:
-        return jsonify({'error': 'JSON must contain a board property'}), 400
+    board, error = validate_board_payload(request.get_json(silent=True))
+    if error:
+        return jsonify({'error': error}), 400
 
-    board = data['board']
-    if (not isinstance(board, list)
-            or len(board) != sudoku_logic.SIZE
-            or any(not isinstance(row, list) or len(row) != sudoku_logic.SIZE for row in board)):
-        return jsonify({'error': 'Board must contain exactly 9 rows of 9 cells'}), 400
-    if any(type(cell) is not int or not 0 <= cell <= sudoku_logic.SIZE
-           for row in board for cell in row):
-        return jsonify({'error': 'Board cells must be integers from 0 through 9'}), 400
-
-    game_id = session.get('game_id')
-    game = get_game_store().get(game_id)
+    game = get_current_game()
     if game is None:
         return jsonify({'error': 'No game in progress'}), 400
 
@@ -70,7 +86,38 @@ def check_solution():
         for j in range(sudoku_logic.SIZE):
             if board[i][j] != solution[i][j]:
                 incorrect.append([i, j])
-    return jsonify({'incorrect': incorrect, 'correct': not incorrect})
+    correct = not incorrect
+    if correct:
+        game['completed'] = True
+    return jsonify({'incorrect': incorrect, 'correct': correct})
+
+
+@app.route('/hint', methods=['POST'])
+def get_hint():
+    if not request.is_json:
+        return jsonify({'error': 'Request must contain JSON'}), 400
+
+    board, error = validate_board_payload(request.get_json(silent=True))
+    if error:
+        return jsonify({'error': error}), 400
+
+    game = get_current_game()
+    if game is None:
+        return jsonify({'error': 'No game in progress'}), 400
+    if game['completed']:
+        return jsonify({'hint': None, 'hints_used': game['hints_used']})
+
+    for row in range(sudoku_logic.SIZE):
+        for col in range(sudoku_logic.SIZE):
+            if board[row][col] == sudoku_logic.EMPTY:
+                game['hinted_cells'].add((row, col))
+                game['hints_used'] += 1
+                return jsonify({
+                    'hint': {'row': row, 'col': col, 'value': game['solution'][row][col]},
+                    'hints_used': game['hints_used'],
+                })
+
+    return jsonify({'hint': None, 'hints_used': game['hints_used']})
 
 if __name__ == '__main__':
     app.run(debug=True)
