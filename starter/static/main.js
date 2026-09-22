@@ -92,10 +92,17 @@ function loadLeaderboard() {
     if (!stored) return [];
     const entries = JSON.parse(stored);
     if (!Array.isArray(entries)) return [];
-    return entries.filter(entry => entry && typeof entry.name === 'string'
+    const validEntries = entries.filter(entry => entry && typeof entry.name === 'string'
       && Number.isInteger(entry.time) && entry.time >= 0
       && typeof entry.difficulty === 'string'
       && Number.isInteger(entry.hints) && entry.hints >= 0);
+    const seen = new Set();
+    return validEntries.filter(entry => {
+      const key = leaderboardEntryKey(entry);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   } catch (error) {
     return [];
   }
@@ -108,6 +115,10 @@ function saveLeaderboard(entries) {
     return false;
   }
   return true;
+}
+
+function leaderboardEntryKey(entry) {
+  return JSON.stringify([entry.name, entry.time, entry.difficulty, entry.hints]);
 }
 
 function renderLeaderboard() {
@@ -127,12 +138,15 @@ function renderLeaderboard() {
 
 function addLeaderboardScore(name) {
   const entries = loadLeaderboard();
-  entries.push({
+  const entry = {
     name: name.trim() || 'Anonymous',
     time: gameState.elapsedSeconds,
     difficulty: gameState.difficulty,
     hints: gameState.hintsUsed,
-  });
+  };
+  if (!entries.some(existingEntry => leaderboardEntryKey(existingEntry) === leaderboardEntryKey(entry))) {
+    entries.push(entry);
+  }
   entries.sort((first, second) => first.time - second.time);
   saveLeaderboard(entries.slice(0, 10));
   renderLeaderboard();

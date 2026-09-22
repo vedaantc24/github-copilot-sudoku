@@ -19,28 +19,41 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 2. Clone your forked repository to your local machine.
 
-3. Open a terminal window and navigate to the "github-copilot-python/starter" directory.
+3. Open a terminal window at the repository root.
 
 4. Create a Python virtual environment and activate it (optional but highly recommended).
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv starter/.venv
+```
+
+On Windows PowerShell, activate it with:
+
+```powershell
+.\starter\.venv\Scripts\Activate.ps1
 ```
 
 5. Install required Python packages.
 
 ```bash
-pip install -r requirements.txt
+pip install -r starter/requirements.txt
 ```
 
 6. Run the Flask app.
 
 ```bash
-python app.py
+python starter/app.py
 ```
 
 7. Open http://127.0.0.1:5000 in your browser.
+
+### Running the tests
+
+From the repository root, run:
+
+```powershell
+.\starter\.venv\Scripts\python.exe -m pytest .\starter\tests
+```
 
 ## Project Instructions
 
